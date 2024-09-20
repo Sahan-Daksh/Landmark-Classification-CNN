@@ -1,6 +1,13 @@
 import torch
 import torch.nn as nn
 
+def create_conv_block(in_channels, out_channels):
+    return nn.Sequential(
+        nn.Conv2d(in_channels, out_channels, kernel_size=3, padding=1),
+        nn.ReLU(inplace=True),
+        nn.BatchNorm2d(out_channels),
+        nn.MaxPool2d(kernel_size=2, stride=2)
+    )
 
 # define the CNN architecture
 class MyModel(nn.Module):
@@ -14,47 +21,29 @@ class MyModel(nn.Module):
         # the Dropout layer, use the variable "dropout" to indicate how much
         # to use (like nn.Dropout(p=dropout))
 
-        self.model = nn.Sequential(
-            nn.Conv2d(3, 32, 3, padding=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(32),
-            nn.MaxPool2d(2, 2),
-
-            nn.Conv2d(32, 64, 3, padding=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(64),
-            nn.MaxPool2d(2, 2),
-
-            nn.Conv2d(64, 128, 3, padding=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(128),
-            nn.MaxPool2d(2, 2),
-
-            nn.Conv2d(128, 256, 3, padding=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(256),
-            nn.MaxPool2d(2, 2),
-
-            nn.Conv2d(256, 512, 3, padding=1),
-            nn.ReLU(),
-            nn.BatchNorm2d(512),
-            nn.MaxPool2d(2, 2),
-
-
+        self.feature_extractor = nn.Sequential(
+            create_conv_block(3, 32),
+            create_conv_block(32, 64),
+            create_conv_block(64, 128),
+            create_conv_block(128, 256),
+            create_conv_block(256, 512)
+        )
+        
+        self.classifier = nn.Sequential(
             nn.Flatten(),
-
             nn.Linear(512 * 7 * 7, 1024),
-            nn.ReLU(),
+            nn.ReLU(inplace=True),
             nn.BatchNorm1d(1024),
             nn.Dropout(p=dropout),
-
             nn.Linear(1024, 512),
-            nn.ReLU(),
+            nn.ReLU(inplace=True),
             nn.Dropout(p=dropout),
-
             nn.Linear(512, num_classes)
-
         )
+    
+    def forward(self, x):
+        x = self.feature_extractor(x)
+        return self.classifier(x)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         # YOUR CODE HERE: process the input tensor through the

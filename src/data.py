@@ -48,7 +48,6 @@ def get_data_loaders(
     data_transforms = {
         "train": transforms.Compose(
         [
-            # To improve performace, I will be adding some more transforms.
             # resizing to 256 first
             transforms.Resize(256),
 

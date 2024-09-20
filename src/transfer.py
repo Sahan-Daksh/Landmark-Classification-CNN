@@ -18,11 +18,15 @@ def get_model_transfer_learning(model_name="resnet18", n_classes=50):
         raise ValueError(f"Model {model_name} is not known. List of available models: "
                          f"https://pytorch.org/vision/{torchvision_major_minor}/models.html")
 
-    # Freeze all parameters in the model
     # HINT: loop over all parameters. If "param" is one parameter,
     # "param.requires_grad = False" freezes it
-    for param in model_transfer.parameters():
-        param.requires_grad = False
+    # Unfreeze only the last few layers
+    for name, param in model_transfer.named_parameters():
+        if "layer4" in name or "fc" in name:  # Unfreeze layer 4 and fc layer
+            param.requires_grad = True
+        else:
+            param.requires_grad = False
+
 
     # Add the linear layer at the end with the appropriate number of classes
     # 1. get numbers of features extracted by the backbone
